@@ -4,6 +4,8 @@
 # or operating system, you probably want to add a global ignore instead:
 #   git config --global core.excludesfile '~/.gitignore_global'
 
+/coverage/
+/spec/vcr_cassettes/
 # Ignore bundler config.
 /.bundle
 
