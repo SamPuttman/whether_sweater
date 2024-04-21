@@ -23,6 +23,17 @@ RSpec.configure do |config|
   config.include FactoryBot::Syntax::Methods
 end
 
+SimpleCov.start "rails" do
+  add_group "Facades", "app/facades"
+  add_group "Serializers", "app/serializers"
+  add_group "Services", "app/services"
+
+  add_filter "app/mailers/"
+  add_filter "app/jobs/"
+  add_filter "app/channels/"
+  add_filter "app/models/application_record.rb"
+end
+
 # Add additional requires below this line. Rails is not loaded until this point!
 
 # Requires supporting ruby files with custom matchers and macros, etc, in
