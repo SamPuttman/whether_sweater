@@ -2,33 +2,34 @@ module Api
   module V0
     class WeatherController < ApplicationController
       def forecast
-        if params[:location].blank?
-          render json: { error: 'Location parameter is missing' }, status: :bad_request
+        location = params[:location]
+        if location.blank?
+          render json: { error: 'Location param is missing' }, status: :bad_request
           return
         end
 
-        location = params[:location].split(',')
-        city = location[0].strip
-        state = location.length > 1 ? location[1].strip : nil
+        result = WeatherFacade.forecast(location)
 
-        if city.blank? || state.blank?
-          render json: { error: 'Both city and state must be provided' }, status: :bad_request
-          return
+        if result[:error]
+          handle_errors(result[:error])
+        else
+          render json: result
         end
+      end
 
-        lat, lng = MapQuestService.new(city, state).coordinates
-        if lat.nil? || lng.nil?
-          render json: { error: 'Location not found' }, status: :not_found
-          return
+      private
+
+      def handle_errors(error)
+        case error
+        when 'Both city and state must be provided'
+          render json: { error: error }, status: :bad_request
+        when 'Location not found'
+          render json: { error: error }, status: :not_found
+        when 'Weather data not available'
+          render json: { error: error }, status: :service_unavailable
+        else
+          render json: { error: 'An unexpected error occurred' }, status: :internal_server_error
         end
-
-        weather_data = WeatherService.new(lat, lng).forecast
-        if weather_data.nil?
-          render json: { error: 'Weather data not available' }, status: :service_unavailable
-          return
-        end
-
-        render json: WeatherSerializer.new(weather_data).serializable_hash
       end
     end
   end

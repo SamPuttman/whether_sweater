@@ -14,7 +14,7 @@ RSpec.describe Api::V0::WeatherController, type: :controller do
       it 'returns bad request' do
         get :forecast, params: {}
         expect(response).to have_http_status(:bad_request)
-        expect(JSON.parse(response.body)["error"]).to eq("Location parameter is missing")
+        expect(JSON.parse(response.body)["error"]).to eq("Location param is missing")
       end
     end
 
