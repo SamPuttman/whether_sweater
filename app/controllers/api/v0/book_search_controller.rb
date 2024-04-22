@@ -10,53 +10,33 @@ module Api
           return
         end
 
-        city, state = parse_location(location)
-        lat, lng = MapQuestService.new(city, state).coordinates
+        result = BookSearchFacade.search(location, quantity)
 
-        if lat.nil? || lng.nil?
-          render json: { error: 'Location not found' }, status: :not_found
-          return
-        end
-
-        weather_data = WeatherService.new(lat, lng).forecast
-
-        if weather_data.nil?
-          render json: { error: 'Weather data not available' }, status: :service_unavailable
-          return
-        end
-
-        books_data = OpenLibraryService.new(location, quantity).search_books
-
-        render json: {
-          data: {
-            id: 'null',
-            type: 'books',
-            attributes: {
-              destination: location,
-              forecast: BookSearchWeatherSerializer.new(weather_data).serializable_hash[:data][:attributes],
-              total_books_found: books_data['numFound'],
-              books: parse_books(books_data)
+        if result[:error]
+          handle_errors(result[:error])
+        else
+          render json: {
+            data: {
+              id: 'null',
+              type: 'books',
+              attributes: result
             }
           }
-        }
+        end
       end
 
       private
 
-      def parse_location(location)
-        location_parts = location.split(',')
-        city = location_parts[0].strip
-        state = location_parts.length > 1 ? location_parts[1].strip : nil
-        [city, state]
-      end
-
-      def parse_books(books_data)
-        books_data['docs'].map do |book|
-          {
-            isbn: book['isbn'] || [],
-            title: book['title'],
-            publisher: book['publisher'] || []
-          }
+      def handle_errors(error)
+        case error
+        when 'Both city and state must be provided', 'Invalid parameters'
+          render json: { error: error }, status: :bad_request
+        when 'Location not found'
+          render json: { error: error }, status: :not_found
+        when 'Weather data not available'
+          render json: { error: error }, status: :service_unavailable
+        else
+          render json: { error: 'An unexpected error occurred' }, status: :internal_server_error
         end
       end
     end
