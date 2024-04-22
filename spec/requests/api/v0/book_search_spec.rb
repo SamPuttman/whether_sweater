@@ -56,5 +56,23 @@ RSpec.describe 'Book Search API', type: :request do
         expect(JSON.parse(response.body)).to eq({ 'error' => 'Location not found' })
       end
     end
+
+    context 'with an invalid quantity' do
+      it 'returns an error' do
+        get "/api/v0/book-search?location=#{location}&quantity=abc"
+
+        expect(response).to have_http_status(:bad_request)
+        expect(JSON.parse(response.body)).to eq({ 'error' => 'Invalid parameters' })
+      end
+    end
+
+    context 'with a non-existent city' do
+      it 'returns an error' do
+        get "/api/v0/book-search?location=bullshitcityname,co&quantity=#{quantity}"
+
+        expect(response).to have_http_status(:not_found)
+        expect(JSON.parse(response.body)).to eq({ 'error' => 'Location not found' })
+      end
+    end
   end
 end
