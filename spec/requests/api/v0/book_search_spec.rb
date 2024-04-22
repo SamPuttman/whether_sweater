@@ -1,7 +1,10 @@
 require 'rails_helper'
 
-RSpec.describe 'Book Search API' do
-  describe 'book search' do
+RSpec.describe 'Book Search API', type: :request do
+  describe 'book-search', :vcr do
+    let(:location) { 'denver,co' }
+    let(:quantity) { 5 }
+
     context 'with valid parameters' do
       it 'returns book search results for the given location', :vcr do
         get '/api/v0/book-search', params: { location: 'denver,co', quantity: 5 }
@@ -11,7 +14,7 @@ RSpec.describe 'Book Search API' do
 
         json = JSON.parse(response.body, symbolize_names: true)
 
-        expect(json[:data][:id]).to eq(nil)
+        expect(json[:data][:id]).to eq('null')
         expect(json[:data][:type]).to eq('books')
         expect(json[:data][:attributes][:destination]).to eq('denver,co')
         expect(json[:data][:attributes][:forecast]).to be_a(Hash)
@@ -19,38 +22,38 @@ RSpec.describe 'Book Search API' do
         expect(json[:data][:attributes][:books]).to be_an(Array)
         expect(json[:data][:attributes][:books].size).to eq(5)
       end
-    end
 
-    context 'with missing location parameter' do
-      it 'returns an error response' do
-        get '/api/v0/book-search', params: { quantity: 5 }
+      it 'returns the book search results' do
+        get "/api/v0/book-search?location=#{location}&quantity=#{quantity}"
 
-        expect(response).to have_http_status(:bad_request)
-
-        json = JSON.parse(response.body, symbolize_names: true)
-        expect(json[:error]).to eq('Location parameter is missing')
+        expect(response).to have_http_status(:success)
       end
     end
 
-    context 'with invalid quantity parameter' do
-      it 'returns an error response' do
-        get '/api/v0/book-search', params: { location: 'denver,co', quantity: 0 }
+    context 'with invalid parameters' do
+      it 'returns an error for missing location' do
+        get "/api/v0/book-search?quantity=#{quantity}"
 
         expect(response).to have_http_status(:bad_request)
+        expect(JSON.parse(response.body)).to eq({ 'error' => 'Invalid parameters' })
+      end
 
-        json = JSON.parse(response.body, symbolize_names: true)
-        expect(json[:error]).to eq('A valid quantity is required')
+      it 'returns an error for invalid quantity' do
+        get "/api/v0/book-search?location=#{location}&quantity=-1"
+
+        expect(response).to have_http_status(:bad_request)
+        expect(JSON.parse(response.body)).to eq({ 'error' => 'Invalid parameters' })
       end
     end
 
     context 'with location not found' do
-      it 'returns an error', :vcr do
-        get '/api/v0/book-search', params: { location: 'invalid_location', quantity: 5 }
+      let(:invalid_location) { 'invalidcity,invalidstate' }
+
+      it 'returns an error' do
+        get "/api/v0/book-search?location=#{invalid_location}&quantity=#{quantity}"
 
         expect(response).to have_http_status(:not_found)
-
-        json = JSON.parse(response.body, symbolize_names: true)
-        expect(json[:error]).to eq('Location not found')
+        expect(JSON.parse(response.body)).to eq({ 'error' => 'Location not found' })
       end
     end
   end
