@@ -26,7 +26,7 @@ end
 SimpleCov.start "rails" do
   add_group "Facades", "app/facades"
   add_group "Serializers", "app/serializers"
-  add_group "Services", "app/services"
+  add_group "Requests", "app/services"
 
   add_filter "app/mailers/"
   add_filter "app/jobs/"
