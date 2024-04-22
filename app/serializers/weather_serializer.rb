@@ -48,13 +48,4 @@ class WeatherSerializer
     current = object["current"] || {}
     current.dig("condition", "text")
   end
-
-  attribute :temperature do |object|
-    current = object["current"] || {}
-    "#{current['temp_f']} F"
-  end
-
-  def self.format_icon_url(url)
-    url ? "https:#{url}" : nil
-  end
 end
