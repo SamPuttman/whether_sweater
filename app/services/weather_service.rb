@@ -13,6 +13,11 @@ class WeatherService
       q: "#{@latitude},#{@longitude}",
       days: 7
     })
+
+    if response.status == 404
+      return nil
+    end
+
     JSON.parse(response.body)
   end
 end
