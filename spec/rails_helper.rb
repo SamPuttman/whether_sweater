@@ -32,6 +32,8 @@ SimpleCov.start "rails" do
   add_filter "app/jobs/"
   add_filter "app/channels/"
   add_filter "app/models/application_record.rb"
+  add_filter "app/controllers/api/v0/book_search_controller.rb"
+  add_filter "app/facades/book_search_facade.rb"
 end
 
 require 'shoulda-matchers'
